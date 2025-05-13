@@ -81,6 +81,7 @@ Registra um clique no post e retorna a URL original.
 
 ## Comandos Docker Úteis
 
+
 - Parar os containers:
   ```bash
   docker-compose down
