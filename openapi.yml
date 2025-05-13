@@ -1,0 +1,294 @@
+openapi: 3.0.0
+info:
+  title: DevAll
+  version: "2.0.0"
+  description: O agregador de fontes de inoformação sobre desenvolvimento de software mantido pela itexto Consultoria
+paths:
+  /api/v2/post:
+    get:
+      summary: Busca posts
+      description: Retorna uma lista de posts baseados em filtros opcionais.
+      parameters:
+        - name: content
+          in: query
+          description: Texto para buscar no título ou resumo do post.
+          required: false
+          schema:
+            type: string
+        - name: site
+          in: query
+          description: ID do site relacionado aos posts.
+          required: false
+          schema:
+            type: integer
+        - name: page
+          in: query
+          description: Número da página para paginação (padrão é 1).
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Lista de posts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+        "500":
+          description: Erro no servidor.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
+  /api/v2/post/{id}/click:
+    get:
+      summary: Registra clique no post e redireciona
+      description: >
+        Este endpoint registra um clique para o post especificado e redireciona o usuário para a URL real do post.  
+        **Nota:** Este endpoint realiza alterações no banco de dados (incrementa o contador de cliques), o que é um efeito colateral. 
+      tags:
+        - Posts
+      parameters:
+        - name: id
+          in: path
+          description: ID do post a ser registrado o clique.
+          required: true
+          schema:
+            type: integer
+            example: 123
+      responses:
+        "302":
+          description: Redirecionamento para a URL do post.
+          headers:
+            Location:
+              description: URL para o qual o usuário será redirecionado.
+              schema:
+                type: string
+                example: "https://example.com/posts/123"
+        "400":
+          description: ID inválido ou erro na requisição.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v2/site/{id}:
+    get:
+      summary: Detalhes do site
+      description: Retorna informações detalhadas de um site específico.
+      parameters:
+        - name: id
+          in: path
+          description: ID do site.
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Detalhes do site.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Site"
+        "400":
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Site não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v2/site:
+    get:
+      summary: Lista de sites recentes
+      description: Retorna os últimos blogs/sites cadastrados no sistema.
+      responses:
+        "200":
+          description: Lista de sites recentes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Site"
+        "500":
+          description: Erro no servidor.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      summary: Cadastra um site
+      description: Registra um novo site no sistema. Requer autenticação por API_KEY.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterSiteRequest"
+      responses:
+        "200":
+          description: Site cadastrado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Site"
+        "401":
+          description: API_KEY inválida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "400":
+          description: Dados inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Erro no servidor.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v2/sources:
+    get:
+      summary: Lista fontes de sites
+      description: Retorna uma lista paginada de fontes de sites.
+      parameters:
+        - name: name
+          in: query
+          description: Nome do site para busca.
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Número da página para paginação.
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Lista de sites.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Site"
+        "500":
+          description: Erro no servidor.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/v2/crawler:
+    post:
+      summary: Inicia o processo de crawler
+      description: Dispara um processo de crawling. Requer autenticação por API_KEY.
+      responses:
+        "200":
+          description: Crawler iniciado com sucesso.
+        "401":
+          description: API_KEY inválida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /feed:
+    get:
+      summary: Obter feed RSS
+      description: Gera o feed RSS com os últimos 20 posts publicados.
+      responses:
+        "200":
+          description: Feed RSS gerado com sucesso.
+          content:
+            application/rss+xml:
+              schema:
+                type: string
+        "500":
+          description: Erro ao gerar o feed RSS.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        summary:
+          type: string
+        url:
+          type: string
+        site:
+          $ref: "#/components/schemas/Site"
+        indexDate:
+          type: string
+          format: date-time
+        pubDate:
+          type: string
+          format: date-time
+
+    Site:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        url:
+          type: string
+        rss:
+          type: string
+        about:
+          type: string
+          nullable: true
+        iframe:
+          type: boolean
+
+    RegisterSiteRequest:
+      type: object
+      required:
+        - name
+        - url
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        rss:
+          type: string
+          nullable: true
+        about:
+          type: string
+          nullable: true
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
