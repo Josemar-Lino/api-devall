@@ -24,6 +24,9 @@ public class Site {
     @Column(name = "feed_url")
     private String feedUrl; // URL do feed RSS do site
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description; // Descrição do site
+
+    @Column(name = "iframe")
+    private Boolean iframe = false;
 } 

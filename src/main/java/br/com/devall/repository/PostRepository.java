@@ -13,19 +13,17 @@ import org.springframework.data.repository.query.Param;
  */
 public interface PostRepository extends JpaRepository<Post, Long> {
     /**
-     * Busca posts com base em conteúdo e site.
+     * Busca posts com base em conteúdo.
+     * A busca é feita por similaridade (like) nos campos título e resumo.
+     * Os posts são ordenados por data de publicação em ordem decrescente.
      * 
-     * @param content Texto para buscar no título ou resumo (opcional)
-     * @param siteId ID do site para filtrar (opcional)
+     * @param content Texto para buscar no título ou resumo
      * @param pageable Configuração de paginação
      * @return Página de posts que correspondem aos critérios
      */
     @Query("SELECT p FROM Post p WHERE " +
            "(:content IS NULL OR LOWER(p.title) LIKE LOWER(CONCAT('%', :content, '%')) OR " +
            "LOWER(p.summary) LIKE LOWER(CONCAT('%', :content, '%'))) " +
-           "AND (:siteId IS NULL OR p.site.id = :siteId) " +
            "ORDER BY p.pubDate DESC")
-    Page<Post> findByContentAndSite(@Param("content") String content, 
-                                  @Param("siteId") Long siteId, 
-                                  Pageable pageable);
+    Page<Post> findByContent(@Param("content") String content, Pageable pageable);
 } 

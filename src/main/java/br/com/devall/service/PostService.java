@@ -7,14 +7,13 @@ import br.com.devall.repository.ClickRepository;
 import br.com.devall.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Serviço que implementa a lógica de negócio relacionada a posts.
@@ -28,18 +27,23 @@ public class PostService {
 
     /**
      * Busca posts com base em critérios de filtro.
+     * A busca é feita por similaridade (like) nos campos título e resumo.
+     * Os posts são sempre ordenados por data de publicação em ordem decrescente.
      * 
      * @param content Texto para buscar no título ou resumo
-     * @param siteId ID do site para filtrar
      * @param pageable Configuração de paginação
-     * @return Lista de posts convertidos para DTO
+     * @return Página de posts convertidos para DTO
      */
-    public List<PostResponseDTO> findPosts(String content, Long siteId, Pageable pageable) {
-        return postRepository.findByContentAndSite(content, siteId, pageable)
-                .getContent()
-                .stream()
-                .map(PostResponseDTO::fromEntity)
-                .collect(Collectors.toList());
+    public Page<PostResponseDTO> findPosts(String content, Pageable pageable) {
+        // Cria um novo Pageable com ordenação por data de publicação
+        Pageable sortedPageable = PageRequest.of(
+            pageable.getPageNumber(),
+            pageable.getPageSize(),
+            Sort.by(Sort.Direction.DESC, "pubDate")
+        );
+
+        return postRepository.findByContent(content, sortedPageable)
+                .map(PostResponseDTO::fromEntity);
     }
 
     /**

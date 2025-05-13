@@ -1,31 +1,34 @@
 package br.com.devall.dto;
 
 import br.com.devall.model.Site;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 /**
- * DTO (Data Transfer Object) para representar um site na resposta da API.
- * Contém informações básicas do site para exibição.
+ * DTO para representar um site na resposta da API.
+ * Contém apenas os campos necessários para exibição.
  */
 @Data
+@JsonIgnoreProperties({"url"})
 public class SiteDTO {
     private Long id;
     private String name;
-    private String url;
     private String feedUrl;
     private String description;
 
     /**
      * Converte uma entidade Site para SiteDTO.
      * 
-     * @param site Entidade Site a ser convertida
+     * @param site Entidade Site
      * @return SiteDTO com os dados do site
      */
     public static SiteDTO fromEntity(Site site) {
+        if (site == null) {
+            return null;
+        }
         SiteDTO dto = new SiteDTO();
         dto.setId(site.getId());
         dto.setName(site.getName());
-        dto.setUrl(site.getUrl());
         dto.setFeedUrl(site.getFeedUrl());
         dto.setDescription(site.getDescription());
         return dto;

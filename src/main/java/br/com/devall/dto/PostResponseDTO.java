@@ -1,6 +1,7 @@
 package br.com.devall.dto;
 
 import br.com.devall.model.Post;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
  * Contém apenas os campos necessários para exibição, sem informações sensíveis.
  */
 @Data
+@JsonIgnoreProperties({"url"})
 public class PostResponseDTO {
     private Long id;
     private String title;
